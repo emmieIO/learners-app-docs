@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { HSStaticMethods } from 'preline';
 import {
   ShieldCheck,
@@ -15,9 +15,12 @@ import {
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     HSStaticMethods.autoInit();
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
   }, [location.pathname]);
 
   const navItems = [
@@ -31,6 +34,16 @@ const MainLayout: React.FC = () => {
   ];
 
   const currentLabel = navItems.find(i => i.path === location.pathname)?.label || 'Documentation';
+
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    // Close mobile sidebar if open
+    const sidebar = document.getElementById('mobile-sidebar');
+    if (sidebar && sidebar.classList.contains('hs-overlay-open')) {
+      const backdrop = sidebar.querySelector('[data-hs-overlay-backdrop]') as HTMLElement;
+      if (backdrop) backdrop.click();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -63,13 +76,14 @@ const MainLayout: React.FC = () => {
 
       {/* Mobile Sidebar Overlay */}
       <div id="mobile-sidebar" className="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform fixed inset-0 z-[60] lg:hidden">
-        <div className="absolute inset-0 bg-black/50" data-hs-overlay-backdrop></div>
+        <div className="absolute inset-0 bg-black/50" data-hs-overlay-backdrop onClick={() => handleNavClick(location.pathname)}></div>
         <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white border-r-2 border-gray-300 shadow-xl pt-6">
           <nav className="space-y-1 px-3">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={() => handleNavClick(item.path)}
                 className={`flex items-center gap-3 py-2.5 px-3 text-sm font-medium border-l-2 ${
                   location.pathname === item.path
                     ? 'bg-blue-50 border-primary text-blue-900 font-semibold'
