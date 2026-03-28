@@ -37,18 +37,29 @@ const MainLayout: React.FC = () => {
 
   const handleNavClick = (path: string) => {
     navigate(path);
-    // Close mobile sidebar if open
+    // Close mobile sidebar if open using Preline's recommended approach
     const sidebar = document.getElementById('mobile-sidebar');
     if (sidebar && sidebar.classList.contains('hs-overlay-open')) {
-      const backdrop = sidebar.querySelector('[data-hs-overlay-backdrop]') as HTMLElement;
-      if (backdrop) backdrop.click();
+      // @ts-ignore
+      if (window.HSOverlay) {
+        // @ts-ignore
+        window.HSOverlay.close(sidebar);
+      } else {
+        // Fallback: click the backdrop if window.HSOverlay is not available
+        const backdrop = document.querySelector('[data-hs-overlay-backdrop-template]') as HTMLElement;
+        if (backdrop) backdrop.click();
+        
+        // Alternative fallback: click the backdrop element inside the sidebar if it exists
+        const internalBackdrop = sidebar.querySelector('[data-hs-overlay-backdrop]') as HTMLElement;
+        if (internalBackdrop) internalBackdrop.click();
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b-2 border-primary">
+      <header className="sticky top-0 z-[70] bg-white border-b-2 border-primary">
         <div className="h-1 bg-primary"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-16 flex items-center justify-between">
@@ -75,9 +86,9 @@ const MainLayout: React.FC = () => {
       </header>
 
       {/* Mobile Sidebar Overlay */}
-      <div id="mobile-sidebar" className="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform fixed inset-0 z-[60] lg:hidden">
+      <div id="mobile-sidebar" className="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform fixed inset-0 z-[60] lg:hidden hidden" tabIndex={-1}>
         <div className="absolute inset-0 bg-black/50" data-hs-overlay-backdrop onClick={() => handleNavClick(location.pathname)}></div>
-        <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white border-r-2 border-gray-300 shadow-xl pt-6">
+        <aside className="absolute left-0 top-16 bottom-0 w-64 bg-white border-r-2 border-gray-300 shadow-xl pt-6">
           <nav className="space-y-1 px-3">
             {navItems.map((item) => (
               <Link
